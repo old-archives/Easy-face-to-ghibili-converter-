@@ -1,122 +1,151 @@
-<!DOCTYPE html>
+<<!DOCTYPE html>
 <html>
 <head>
-<title>Ghibli Face Generator</title>
+<title>Coach X – BGMI AI Coach</title>
+
 <style>
     body {
         margin: 0;
-        background: #0e0e0e;
-        font-family: Arial;
-        text-align: center;
-        padding-top: 40px;
+        background: #000;
         color: white;
+        font-family: Arial, sans-serif;
+        text-align: center;
     }
 
     .box {
         width: 90%;
-        max-width: 420px;
-        background: #1f1f1f;
-        padding: 20px;
-        border-radius: 12px;
-        margin: auto;
+        max-width: 450px;
+        margin: 40px auto;
+        background: rgba(255,255,255,0.06);
+        padding: 25px;
+        border-radius: 15px;
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 215, 0, 0.3);
     }
 
-    input, button {
-        width: 100%;
-        padding: 12px;
-        font-size: 16px;
-        margin-top: 10px;
-        border-radius: 8px;
-        border: none;
+    h1 {
+        font-size: 28px;
+        color: gold;
+        text-shadow: 0 0 10px gold;
     }
 
     button {
-        background: #4a90e2;
-        color: white;
+        width: 90%;
+        padding: 14px;
+        margin-top: 10px;
+        background: gold;
+        border: none;
+        color: black;
+        font-size: 18px;
         font-weight: bold;
+        border-radius: 10px;
         cursor: pointer;
     }
 
-    img {
-        width: 100%;
-        margin-top: 15px;
-        border-radius: 12px;
-        display: none;
+    #chatBox {
+        height: 230px;
+        overflow-y: auto;
+        background: rgba(255,255,255,0.07);
+        padding: 10px;
+        border-radius: 10px;
+        text-align: left;
     }
 
-    #downloadBtn {
-        display: none;
-        background: #3ecf8e;
-        margin-top: 12px;
+    input, textarea {
+        width: 90%;
+        margin-top: 10px;
+        padding: 10px;
+        border-radius: 8px;
+        border: none;
     }
-
 </style>
 </head>
-
 <body>
 
-<h2>Ghibli AI Face Generator</h2>
+<h1>Coach X – BGMI AI Coach 🎮🔥</h1>
 
 <div class="box">
-    <input type="file" id="fileInput" accept="image/*">
+    <div id="chatBox"></div>
 
-    <button onclick="generate()">Generate Ghibli Art</button>
+    <textarea id="userInput" placeholder="Ask anything… e.g. Coach, mera close-range weak hai"></textarea>
 
-    <p id="status"></p>
+    <button onclick="sendMessage()">Ask Coach X</button>
+    <button onclick="startVoice()">🎤 Speak to Coach X</button>
 
-    <img id="outputImage">
-    <a id="downloadBtn" download="ghibli.png">Download Image</a>
+    <h3>Upload Screenshot / Mini Clip</h3>
+    <input type="file" id="uploadFile" accept="image/*,video/*">
 </div>
 
 <script>
+const GROK_KEY = "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";
 
-const HF_TOKEN = "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";  // <-- REPLACE ONLY THIS
+// Coach X Personality (Hinglish + BGMI Meta)
+const COACH_SYSTEM = `
+You are Coach X, India's top BGMI eSports analyst.
+You speak Hinglish (Hindi + English mix).
+Keep answers short, clean, and practical.
 
-async function generate() {
-    let fileInput = document.getElementById("fileInput");
-    let status = document.getElementById("status");
-    let output = document.getElementById("outputImage");
-    let downloadBtn = document.getElementById("downloadBtn");
+You understand:
+• BGMI meta 2023–2025
+• close-range drills
+• rotations, positioning, zone control
+• gyroscope techniques
+• comparison with Indian pros (Jonathan, Goblin, Manya, Spower)
+• common mistakes ranked players make
 
-    if (!fileInput.files.length) {
-        alert("Please upload a photo!");
-        return;
-    }
+IMPORTANT:
+You DO NOT analyze images or video clips.
+If user uploads a clip, you guide them HOW to improve, but not predict content.
+`;
 
-    let photo = fileInput.files[0];
-    status.innerText = "Generating... please wait 10–20 seconds ⏳";
-    output.style.display = "none";
-    downloadBtn.style.display = "none";
-
-    const response = await fetch(
-        "https://api-inference.huggingface.co/models/linoymoon/Ghibli-Style-Anything-V5",
-        {
-            method: "POST",
-            headers: {
-                "Authorization": "Bearer " + HF_TOKEN,
-                "Content-Type": photo.type    // MUST NOT be in quotes
-            },
-            body: photo                      // raw file buffer
-        }
-    );
-
-    if (!response.ok) {
-        status.innerText = "❌ Error generating image!";
-        return;
-    }
-
-    const blob = await response.blob();
-    const url = URL.createObjectURL(blob);
-
-    output.src = url;
-    output.style.display = "block";
-
-    downloadBtn.style.display = "block";
-    downloadBtn.href = url;
-
-    status.innerText = "Done ✔";
+// Add message to chat
+function addMessage(sender, text) {
+    const box = document.getElementById("chatBox");
+    box.innerHTML += `<p><b>${sender}:</b> ${text}</p>`;
+    box.scrollTop = box.scrollHeight;
 }
 
+// Send message to Grok
+async function sendMessage() {
+    const input = document.getElementById("userInput").value;
+    if (!input) return;
+
+    addMessage("You", input);
+    document.getElementById("userInput").value = "";
+
+    const response = await fetch("https://api.x.ai/v1/chat/completions", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "Authorization": "Bearer " + GROK_KEY
+        },
+        body: JSON.stringify({
+            model: "grok-1",
+            messages: [
+                { role: "system", content: COACH_SYSTEM },
+                { role: "user", content: input }
+            ]
+        })
+    });
+
+    const data = await response.json();
+    const reply = data.choices?.[0]?.message?.content || "Error generating reply.";
+
+    addMessage("Coach X", reply);
+}
+
+// Voice input
+function startVoice() {
+    const r = new webkitSpeechRecognition();
+    r.lang = "hi-IN";
+    r.start();
+
+    r.onresult = function(e) {
+        const text = e.results[0][0].transcript;
+        addMessage("🎙️ You (Voice)", text);
+        document.getElementById("userInput").value = text;
+    };
+}
 </script>
 
 </body>
