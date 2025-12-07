@@ -1,1 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Ghibli AI Face Generator</title>
+<style>
+    body {
+        margin: 0;
+        background: url('https://wallpapers.com/images/featured/ghibli-background-4k-1kztyvq0xb9uos97.jpg');
+        background-size: cover;
+        background-position: center;
+        font-family: Arial, sans-serif;
+        color: white;
+        text-align: center;
+        padding-top: 40px;
+    }
+    .box {
+        background: rgba(0,0,0,0.65);
+        width: 90%;
+        max-width: 420px;
+        margin: auto;
+        padding: 20px;
+        border-radius: 12px;
+    }
+    input, button {
+        margin-top: 10px;
+        padding: 12px;
+        width: 100%;
+        border: none;
+        border-radius: 8px;
+        font-size: 16px;
+    }
+    button {
+        background: #ffcc00;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    img {
+        margin-top: 15px;
+        width: 100%;
+        border-radius: 12px;
+    }
+</style>
+</head>
 
+<body>
+
+<div class="box">
+    <h2>🎨 Ghibli AI Face Generator</h2>
+
+    <input type="file" id="inputImage" accept="image/*">
+
+    <button onclick="generateImage()">Generate Ghibli Style</button>
+
+    <p id="status"></p>
+
+    <img id="outputImage" style="display:none;">
+
+    <a id="downloadBtn" style="display:none;" download="ghibli_face.png">
+        <button>Download Image</button>
+    </a>
+</div>
+
+<script>
+async function generateImage() {
+    let fileInput = document.getElementById("inputImage");
+    let status = document.getElementById("status");
+    let output = document.getElementById("outputImage");
+    let downloadBtn = document.getElementById("downloadBtn");
+
+    if (!fileInput.files.length) {
+        alert("Please upload a photo first!");
+        return;
+    }
+
+    let photo = fileInput.files[0];
+    let reader = new FileReader();
+
+    reader.onloadend = async () => {
+        status.innerText = "Generating... Please wait (10-20 sec)";
+        output.style.display = "none";
+        downloadBtn.style.display = "none";
+
+        const response = await fetch(
+            "https://api-inference.huggingface.co/models/linoymoon/Ghibli-Style-Anything-V5",
+            {
+                method: "POST",
+                headers: {
+                    "Authorization": "Bearer YOUR_HF_TOKEN_HERE"
+                },
+                body: reader.result
+            }
+        );
+
+        if (!response.ok) {
+            status.innerText = "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";
+            return;
+        }
+
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+
+        output.src = url;
+        output.style.display = "block";
+
+        downloadBtn.href = url;
+        downloadBtn.style.display = "block";
+
+        status.innerText = "Done ✓";
+    };
+
+    reader.readAsArrayBuffer(photo);
+}
+</script>
+
+</body>
+</html>
