@@ -1,82 +1,90 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Ghibli AI Face Generator</title>
-  <style>
+<title>Ghibli Face Generator</title>
+<style>
     body {
-      margin: 0;
-      background: #111;
-      color: white;
-      text-align: center;
-      font-family: Arial;
-      padding-top: 40px;
+        margin: 0;
+        background: #0e0e0e;
+        font-family: Arial;
+        text-align: center;
+        padding-top: 40px;
+        color: white;
     }
+
     .box {
-      width: 90%;
-      max-width: 420px;
-      padding: 20px;
-      margin: auto;
-      background: rgba(255,255,255,0.1);
-      border-radius: 12px;
+        width: 90%;
+        max-width: 420px;
+        background: #1f1f1f;
+        padding: 20px;
+        border-radius: 12px;
+        margin: auto;
     }
+
     input, button {
-      width: 90%;
-      padding: 12px;
-      margin: 12px auto;
-      border-radius: 8px;
-      border: none;
-      font-size: 16px;
+        width: 100%;
+        padding: 12px;
+        font-size: 16px;
+        margin-top: 10px;
+        border-radius: 8px;
+        border: none;
     }
+
     button {
-      background: #ff8800;
-      color: white;
-      font-weight: bold;
+        background: #4a90e2;
+        color: white;
+        font-weight: bold;
+        cursor: pointer;
     }
+
+    img {
+        width: 100%;
+        margin-top: 15px;
+        border-radius: 12px;
+        display: none;
+    }
+
     #downloadBtn {
-      display: none;
-      background: green;
-      color: white;
+        display: none;
+        background: #3ecf8e;
+        margin-top: 12px;
     }
-    #outputImage {
-      width: 100%;
-      margin-top: 15px;
-      display: none;
-      border-radius: 10px;
-    }
-  </style>
+
+</style>
 </head>
+
 <body>
 
-  <div class="box">
-    <h2>Face → Ghibli AI</h2>
+<h2>Ghibli AI Face Generator</h2>
 
+<div class="box">
     <input type="file" id="fileInput" accept="image/*">
-    <button onclick="generateImage()">Generate Ghibli Image</button>
+
+    <button onclick="generate()">Generate Ghibli Art</button>
 
     <p id="status"></p>
 
     <img id="outputImage">
     <a id="downloadBtn" download="ghibli.png">Download Image</a>
-  </div>
+</div>
 
 <script>
 
-const HF_TOKEN = "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";  // ← Replace only here
+const HF_TOKEN = "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";  // <-- REPLACE ONLY THIS
 
-async function generateImage() {
-    const fileInput = document.getElementById("fileInput");
-    const status = document.getElementById("status");
-    const output = document.getElementById("outputImage");
-    const downloadBtn = document.getElementById("downloadBtn");
+async function generate() {
+    let fileInput = document.getElementById("fileInput");
+    let status = document.getElementById("status");
+    let output = document.getElementById("outputImage");
+    let downloadBtn = document.getElementById("downloadBtn");
 
     if (!fileInput.files.length) {
-        alert("Please upload a photo first!");
+        alert("Please upload a photo!");
         return;
     }
 
-    const photo = fileInput.files[0];
-
-    status.innerText = "Generating... Please wait 10–20 seconds ⏳";
+    let photo = fileInput.files[0];
+    status.innerText = "Generating... please wait 10–20 seconds ⏳";
     output.style.display = "none";
     downloadBtn.style.display = "none";
 
@@ -86,14 +94,14 @@ async function generateImage() {
             method: "POST",
             headers: {
                 "Authorization": "Bearer " + HF_TOKEN,
-                "Content-Type": photo.type     // ← VERY IMPORTANT
+                "Content-Type": photo.type    // MUST NOT be in quotes
             },
-            body: photo                        // ← RAW IMAGE (Correct Format)
+            body: photo                      // raw file buffer
         }
     );
 
     if (!response.ok) {
-        status.innerText = "Error generating image ❌ (Model may be sleeping)";
+        status.innerText = "❌ Error generating image!";
         return;
     }
 
@@ -103,10 +111,10 @@ async function generateImage() {
     output.src = url;
     output.style.display = "block";
 
+    downloadBtn.style.display = "block";
     downloadBtn.href = url;
-    downloadBtn.style.display = "inline-block";
 
-    status.innerText = "Done ✓";
+    status.innerText = "Done ✔";
 }
 
 </script>
