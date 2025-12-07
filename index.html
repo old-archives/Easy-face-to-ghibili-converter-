@@ -1,143 +1,114 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Ghibli Face Generator</title>
-<style>
+  <title>Ghibli AI Face Generator</title>
+  <style>
     body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: url('https://images.unsplash.com/photo-1503264116251-35a269479413?auto=format&fit=crop&w=1350&q=80') no-repeat center center fixed;
-        background-size: cover;
-        text-align: center;
-        color: white;
-        padding: 40px;
+      margin: 0;
+      background: #111;
+      color: white;
+      text-align: center;
+      font-family: Arial;
+      padding-top: 40px;
     }
-
     .box {
-        background: rgba(0,0,0,0.6);
-        padding: 25px;
-        border-radius: 12px;
-        width: 90%;
-        max-width: 420px;
-        margin: auto;
-        margin-top: 40px;
+      width: 90%;
+      max-width: 420px;
+      padding: 20px;
+      margin: auto;
+      background: rgba(255,255,255,0.1);
+      border-radius: 12px;
     }
-
     input, button {
-        width: 90%;
-        padding: 12px;
-        margin-top: 12px;
-        border-radius: 8px;
-        border: none;
-        font-size: 16px;
+      width: 90%;
+      padding: 12px;
+      margin: 12px auto;
+      border-radius: 8px;
+      border: none;
+      font-size: 16px;
     }
-
     button {
-        background: #ffcc00;
-        cursor: pointer;
-        font-weight: bold;
+      background: #ff8800;
+      color: white;
+      font-weight: bold;
     }
-
-    button:hover {
-        background: #ffdd33;
-    }
-
-    #outputImage {
-        margin-top: 20px;
-        width: 90%;
-        max-width: 380px;
-        border-radius: 10px;
-        display: none;
-    }
-
     #downloadBtn {
-        display: none;
-        margin-top: 20px;
-        background: #00ff99;
-        padding: 12px;
-        text-decoration: none;
-        font-weight: bold;
-        color: black;
-        border-radius: 8px;
+      display: none;
+      background: green;
+      color: white;
     }
-
-    #status {
-        margin-top: 15px;
-        font-size: 18px;
-        font-weight: bold;
+    #outputImage {
+      width: 100%;
+      margin-top: 15px;
+      display: none;
+      border-radius: 10px;
     }
-</style>
+  </style>
 </head>
-
 <body>
 
-<h1>Ghibli AI Face Generator ✨</h1>
+  <div class="box">
+    <h2>Face → Ghibli AI</h2>
 
-<div class="box">
     <input type="file" id="fileInput" accept="image/*">
-    <button onclick="generate()">Generate Ghibli Image</button>
+    <button onclick="generateImage()">Generate Ghibli Image</button>
 
     <p id="status"></p>
 
     <img id="outputImage">
-    <a id="downloadBtn" download="ghibli-face.png">Download Image</a>
-</div>
+    <a id="downloadBtn" download="ghibli.png">Download Image</a>
+  </div>
 
 <script>
-const HF_TOKEN = "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";  // ← REPLACE THIS
 
-async function generate() {
-    let input = document.getElementById("fileInput");
-    let status = document.getElementById("status");
-    let output = document.getElementById("outputImage");
-    let downloadBtn = document.getElementById("downloadBtn");
+const HF_TOKEN = "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";  // ← Replace only here
 
-    if (!input.files.length) {
+async function generateImage() {
+    const fileInput = document.getElementById("fileInput");
+    const status = document.getElementById("status");
+    const output = document.getElementById("outputImage");
+    const downloadBtn = document.getElementById("downloadBtn");
+
+    if (!fileInput.files.length) {
         alert("Please upload a photo first!");
         return;
     }
 
-    let photo = input.files[0];
-    let reader = new FileReader();
+    const photo = fileInput.files[0];
 
-    reader.onloadend = async () => {
-        output.style.display = "none";
-        downloadBtn.style.display = "none";
-        status.innerText = "Generating... Please wait 10–20 seconds ⏳";
+    status.innerText = "Generating... Please wait 10–20 seconds ⏳";
+    output.style.display = "none";
+    downloadBtn.style.display = "none";
 
-        const response = await fetch(
-            "https://api-inference.huggingface.co/models/linoymoon/Ghibli-Style-Anything-V5",
-            {
-                method: "POST",
-                headers: {
-                    "Authorization": "Bearer " + HF_TOKEN,
-                    "Content-Type": "application/json"
-                },
-                body: JSON.stringify({
-                    inputs: reader.result
-                })
-            }
-        );
-
-        if (!response.ok) {
-            status.innerText = "❌ Error generating image (model busy or token wrong).";
-            return;
+    const response = await fetch(
+        "https://api-inference.huggingface.co/models/linoymoon/Ghibli-Style-Anything-V5",
+        {
+            method: "POST",
+            headers: {
+                "Authorization": "Bearer " + HF_TOKEN,
+                "Content-Type": photo.type     // ← VERY IMPORTANT
+            },
+            body: photo                        // ← RAW IMAGE (Correct Format)
         }
+    );
 
-        const blob = await response.blob();
-        const url = URL.createObjectURL(blob);
+    if (!response.ok) {
+        status.innerText = "Error generating image ❌ (Model may be sleeping)";
+        return;
+    }
 
-        output.src = url;
-        output.style.display = "block";
+    const blob = await response.blob();
+    const url = URL.createObjectURL(blob);
 
-        downloadBtn.href = url;
-        downloadBtn.style.display = "inline-block";
+    output.src = url;
+    output.style.display = "block";
 
-        status.innerText = "✅ Done! Your Ghibli image is ready.";
-    };
+    downloadBtn.href = url;
+    downloadBtn.style.display = "inline-block";
 
-    reader.readAsDataURL(photo); // IMPORTANT ✔
+    status.innerText = "Done ✓";
 }
+
 </script>
 
 </body>
